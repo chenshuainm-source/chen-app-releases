@@ -1,23 +1,48 @@
-# 陳
+# 陳 Android 原生控制端
 
+## 版本
 
-Android 客户端版本下载与安装说明。
+- 应用名称：陳
+- 包名：`com.videoflow.control`
+- 版本：`3.0.0`（versionCode 7）
+- 最低系统：Android 6.0（API 23）
+- 目标系统：Android 14（API 34）
+- 当前签名：Android Debug，仅供内测安装
+- APK SHA-256：`DA31FD47CE38AE46490DF212C555878EA5CC5DD4FD16C3533E7745F5D5A018EE`
 
+最新安装包：`../app/public/downloads/chen-android-latest.apk`
 
-## 最新版
+## 3.0.0 更新
 
+- 同步“陳 3.0 控制中心”：桌面与手机端统一科技感界面。
+- 新增维护中心、健康评分、后台心跳、磁盘空间、备份与诊断状态。
+- Windows 后台新增每小时快照、每日备份、自动清理与安全恢复点。
+- 重大版本构建后由 GitHub Actions 自动生成 APK、校验文件与预发布页面。
 
-- [下载陳 Android v2.1.0](https://github.com/chenshuainm-source/chen-app-releases/releases/download/v2.1.0/chen-Android-v2.1.0.apk)
-- [查看完整更新说明](https://github.com/chenshuainm-source/chen-app-releases/releases/tag/v2.1.0)
+## 2.1.0 更新
 
+- 安卓 App 默认显示与 Windows 端相同的完整工作台，不再只提供启动和停止。
+- 电脑端新增账号、文案池、发布时间、自检或任务功能后，安卓端会自动同步，无需重复开发两套页面。
+- 原生层继续负责固定链接配对、后台监控、开机恢复和系统通知。
+- 增加任务暂停、继续、重试、取消与人工批准入口，网络页面异常时仍有原生控制兜底。
 
-## 安装
+## 2.0.2 更新
 
+- 界面同步 Windows 工作台：墨蓝背景、青绿主色、品牌区、圆角卡片和状态标签。
+- 当前运行大卡显示文案、豆包、下载、字幕、发布、核验六阶段。
+- 独立展示账号数、等待数、完成数。
+- 每个账号分区显示豆包/视频号在线状态、轮转状态和最多三个随机发布时间段。
+- 连接页明确区分正式固定云服务与临时联调通道。
+- 支持 `https://域名/i/安装ID/?access=令牌` 形式的固定云中继配对链接。
+- 原生启动/停止全部轮转、15 秒前台刷新、60 秒后台检查和系统通知。
+- 软件名称改为繁体「陳」，应用图标使用用户提供的黑白动漫原图。
 
-1. 下载 APK。
-2. 在 Android 系统中允许对应浏览器“安装未知应用”。
-3. 安装并打开「陳」，粘贴 Windows 工作台显示的 HTTPS 配对链接。
+## 正式网络
 
+正式客户端连接中国大陆普通网络可达的固定 HTTPS 云中继，不占用手机 VPN，也不要求与电脑处于同一 Wi-Fi。Tailscale 和 Cloudflare Quick Tunnel 仅作为开发诊断备用。
 
-> 当前 APK 为内测签名版。本仓库只存放客户端发行文件，不存放账号、会话、文案、视频或密钥。
+## 构建
 
+运行 `build-apk.ps1`。脚本会从 `app/build.gradle` 自动读取版本号，输出版本包和 `video-flow-android-latest.apk`。
+
+公开发布前必须生成并离线保存 Release 签名密钥。后续每个版本必须使用同一密钥，Android 才能覆盖更新。

@@ -1,0 +1,44 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+      - name: Build Android APK
+        run: gradle --no-daemon assembleDebug
+      - name: Prepare download file
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          FILE="chen-Android-v${VERSION}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "$FILE"
+          sha256sum "$FILE" > "chen-v${VERSION}-SHA256.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chen-android
+          path: |
+            chen-Android-*.apk
+            chen-*-SHA256.txt
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh release create "$GITHUB_REF_NAME" chen-Android-*.apk chen-*-SHA256.txt --generate-notes --prerelease --title "陳 Android ${GITHUB_REF_NAME}"
