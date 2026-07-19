@@ -13,6 +13,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 final class ApiClient {
+    static final String DISCOVERY_ENDPOINT = "https://chenshuainm-source.github.io/chen-app-releases/endpoint.json";
+    static final String DISCOVERY_SHELL = "https://chenshuainm-source.github.io/chen-app-releases/";
     static final class Pairing {
         final String baseUrl;
         final String token;
@@ -48,6 +50,25 @@ final class ApiClient {
 
     static JSONObject post(String baseUrl, String token, String path) throws Exception {
         return request(baseUrl, token, path, "POST", "{}");
+    }
+
+    static String discoverBaseUrl() throws Exception {
+        HttpURLConnection connection = (HttpURLConnection) new URL(DISCOVERY_ENDPOINT + "?t=" + System.currentTimeMillis()).openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(12_000);
+        connection.setReadTimeout(18_000);
+        connection.setRequestProperty("Accept", "application/json");
+        connection.setUseCaches(false);
+        int status = connection.getResponseCode();
+        String response = readAll(status >= 400 ? connection.getErrorStream() : connection.getInputStream());
+        connection.disconnect();
+        if (status >= 400) throw new Exception("入口发现失败 · HTTP " + status);
+        String origin = new JSONObject(response).optString("origin", "").replaceAll("/$", "");
+        URL parsed = new URL(origin);
+        if (!"https".equalsIgnoreCase(parsed.getProtocol()) || parsed.getHost() == null || !parsed.getHost().endsWith(".trycloudflare.com")) {
+            throw new Exception("入口发现文件无效");
+        }
+        return origin;
     }
 
     private static JSONObject request(String baseUrl, String token, String path, String method, String body) throws Exception {
