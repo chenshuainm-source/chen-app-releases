@@ -4,13 +4,20 @@
 
 - 应用名称：陳
 - 包名：`com.videoflow.control`
-- 版本：`3.0.0`（versionCode 7）
+- 版本：`3.0.1`（versionCode 8）
 - 最低系统：Android 6.0（API 23）
 - 目标系统：Android 14（API 34）
 - 当前签名：Android Debug，仅供内测安装
-- APK SHA-256：`DA31FD47CE38AE46490DF212C555878EA5CC5DD4FD16C3533E7745F5D5A018EE`
+- APK SHA-256：`CC9BBD2A0BEF1093836A8F82D3F67FEF50F137FF499A3C11AF6C751B54A17D19`
 
 最新安装包：`../app/public/downloads/chen-android-latest.apk`
+
+## 3.0.1 更新
+
+- 新增 GitHub Pages 固定发现入口，Cloudflare 临时域名变化后无需重新配对。
+- WebView 始终从固定入口加载控制台，并每 30 秒自动检查最新地址。
+- 原生 API 和后台通知连接失败时会读取发现文件、更新地址并重试。
+- 发现文件不包含设备控制令牌；令牌只保存在本机和手机本地。
 
 ## 3.0.0 更新
 
