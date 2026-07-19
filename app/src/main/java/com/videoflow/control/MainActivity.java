@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -418,8 +419,7 @@ public class MainActivity extends Activity {
     }
 
     private void showFullDashboard() {
-        String pairingUrl = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_PAIRING_URL, "");
-        if (pairingUrl.isEmpty()) {
+        if (token.isEmpty()) {
             showDashboard();
             return;
         }
@@ -443,7 +443,10 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
-        fullDashboard.loadUrl(pairingUrl);
+        // Keep the WebView on a permanent GitHub Pages origin. The page reads a
+        // token-free endpoint document and swaps the embedded tunnel whenever
+        // Cloudflare rotates its temporary hostname.
+        fullDashboard.loadUrl(ApiClient.DISCOVERY_SHELL + "#access=" + Uri.encode(token));
         setContentView(fullDashboard);
     }
 
@@ -489,6 +492,15 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> renderState(state));
                 NotificationHelper.dispatchHumanAlerts(this, state);
             } catch (Exception error) {
+                try {
+                    String recovered = ApiClient.discoverBaseUrl();
+                    JSONObject state = ApiClient.getState(recovered, token);
+                    baseUrl = recovered;
+                    getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(KEY_BASE_URL, recovered).apply();
+                    runOnUiThread(() -> renderState(state));
+                    NotificationHelper.dispatchHumanAlerts(this, state);
+                    return;
+                } catch (Exception ignored) {}
                 runOnUiThread(() -> {
                     if (connectionText != null) {
                         connectionText.setText("连接失败 · 点刷新重试");
