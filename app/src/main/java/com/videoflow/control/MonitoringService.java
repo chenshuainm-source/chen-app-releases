@@ -40,7 +40,14 @@ public class MonitoringService extends Service {
                     stopSelf();
                     break;
                 }
-                JSONObject state = ApiClient.getState(baseUrl, token);
+                JSONObject state;
+                try {
+                    state = ApiClient.getState(baseUrl, token);
+                } catch (Exception staleEndpoint) {
+                    baseUrl = ApiClient.discoverBaseUrl();
+                    prefs.edit().putString(MainActivity.KEY_BASE_URL, baseUrl).apply();
+                    state = ApiClient.getState(baseUrl, token);
+                }
                 NotificationHelper.dispatchHumanAlerts(this, state);
             } catch (Exception ignored) {}
             try { Thread.sleep(60_000L); }
