@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="陳">
   <meta http-equiv="Cache-Control" content="no-store">
   <title>陳</title>
   <style>
@@ -24,11 +26,17 @@
     const message=document.getElementById('message');
     const retry=document.getElementById('retry');
     const dashboard=document.getElementById('dashboard');
+    const query=new URLSearchParams(location.search);
     const fragment=new URLSearchParams(location.hash.replace(/^#/,''));
-    const supplied=fragment.get('access');
-    if(supplied&&supplied.length>=24)localStorage.setItem('chen_access',supplied);
-    const token=supplied||localStorage.getItem('chen_access')||'';
-    if(supplied)history.replaceState(null,'',location.pathname);
+    const supplied=query.get('access')||fragment.get('access');
+    if(supplied&&supplied.length>=24){
+      localStorage.setItem('chen_access',supplied);
+      document.cookie=`chen_access=${encodeURIComponent(supplied)}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
+    }
+    const cookie=decodeURIComponent((document.cookie.match(/(?:^|;\s*)chen_access=([^;]+)/)||[])[1]||'');
+    const token=supplied||localStorage.getItem('chen_access')||cookie||'';
+    // Do not remove the access fragment. iOS captures the current URL when the
+    // user adds this page to the Home Screen; removing it created an unpaired app.
     let currentOrigin='';
     async function discover(){
       if(!token){message.innerHTML='<span class="error">设备尚未配对。</span>\n请从电脑端“安装手机客户端”重新复制固定入口。';retry.classList.add('hidden');return}
