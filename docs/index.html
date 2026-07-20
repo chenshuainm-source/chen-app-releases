@@ -14,18 +14,22 @@
     #dashboard{border:0;background:var(--bg)}#status{position:fixed;inset:0;z-index:2;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 80% 0,#12334a 0,transparent 36%),var(--bg)}
     .card{width:min(440px,100%);padding:24px;border:1px solid var(--line);border-radius:22px;background:rgba(13,27,44,.96);box-shadow:0 24px 80px rgba(0,0,0,.3)}
     .eyebrow{font-size:11px;letter-spacing:.16em;color:var(--cyan);font-weight:800}.brand{font-size:32px;font-weight:900;margin:6px 0}.message{color:var(--muted);white-space:pre-line}.error{color:var(--red)}button{width:100%;margin-top:16px;padding:13px;border:0;border-radius:12px;background:var(--cyan);color:#07101d;font-weight:800;font-size:15px}
+    .pairing{display:grid;gap:10px;margin-top:16px}.pairing input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;background:#071321;color:var(--text);font-size:14px}.pairing .hint{font-size:12px;color:var(--muted)}
     .hidden{display:none!important}
   </style>
 </head>
 <body>
   <iframe id="dashboard" title="陳控制台" class="hidden" allow="clipboard-read; clipboard-write"></iframe>
-  <div id="status"><div class="card"><div class="eyebrow">SELF-HEALING MOBILE ENTRY</div><div class="brand">陳</div><div id="message" class="message">正在寻找这台电脑的最新安全入口…</div><button id="retry" class="hidden" type="button">重新连接</button></div></div>
+  <div id="status"><div class="card"><div class="eyebrow">SELF-HEALING MOBILE ENTRY</div><div class="brand">陳</div><div id="message" class="message">正在寻找这台电脑的最新安全入口…</div><div id="pairing" class="pairing hidden"><input id="pairingValue" autocomplete="off" inputmode="url" placeholder="粘贴电脑端复制的固定入口"><button id="pair" type="button">一键重新配对</button><div class="hint">只需配对一次，以后切换 Wi-Fi、流量或 VPN 都会自动寻找电脑。</div></div><button id="retry" class="hidden" type="button">重新连接</button></div></div>
   <script>
     const endpointUrl='./endpoint.json';
     const status=document.getElementById('status');
     const message=document.getElementById('message');
     const retry=document.getElementById('retry');
     const dashboard=document.getElementById('dashboard');
+    const pairing=document.getElementById('pairing');
+    const pairingValue=document.getElementById('pairingValue');
+    const pair=document.getElementById('pair');
     const query=new URLSearchParams(location.search);
     const fragment=new URLSearchParams(location.hash.replace(/^#/,''));
     const supplied=query.get('access')||fragment.get('access');
@@ -34,12 +38,21 @@
       document.cookie=`chen_access=${encodeURIComponent(supplied)}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
     }
     const cookie=decodeURIComponent((document.cookie.match(/(?:^|;\s*)chen_access=([^;]+)/)||[])[1]||'');
-    const token=supplied||localStorage.getItem('chen_access')||cookie||'';
+    let token=supplied||localStorage.getItem('chen_access')||cookie||'';
+    function extractToken(value){
+      const text=String(value||'').trim();
+      if(/^[A-Za-z0-9_-]{24,}$/.test(text))return text;
+      try{const url=new URL(text);return url.searchParams.get('access')||new URLSearchParams(url.hash.replace(/^#/,'')).get('access')||''}catch{return ''}
+    }
+    function saveToken(value){
+      token=value;localStorage.setItem('chen_access',value);
+      document.cookie=`chen_access=${encodeURIComponent(value)}; Max-Age=31536000; Path=/; SameSite=Lax; Secure`;
+    }
     // Do not remove the access fragment. iOS captures the current URL when the
     // user adds this page to the Home Screen; removing it created an unpaired app.
     let currentOrigin='';
     async function discover(){
-      if(!token){message.innerHTML='<span class="error">设备尚未配对。</span>\n请从电脑端“安装手机客户端”重新复制固定入口。';retry.classList.add('hidden');return}
+      if(!token){message.innerHTML='<span class="error">设备尚未配对。</span>\n在电脑端“安装手机客户端”点击复制固定入口，然后粘贴到下方。';pairing.classList.remove('hidden');retry.classList.add('hidden');return}
       try{
         const response=await fetch(`${endpointUrl}?t=${Date.now()}`,{cache:'no-store'});
         if(!response.ok)throw new Error(`HTTP ${response.status}`);
@@ -51,12 +64,13 @@
           message.textContent='已找到最新入口，正在连接电脑…';
           dashboard.src=`${origin}/?access=${encodeURIComponent(token)}`;
         }
-        dashboard.classList.remove('hidden');status.classList.add('hidden');retry.classList.add('hidden');
+        pairing.classList.add('hidden');dashboard.classList.remove('hidden');status.classList.add('hidden');retry.classList.add('hidden');
       }catch(error){
         dashboard.classList.add('hidden');status.classList.remove('hidden');retry.classList.remove('hidden');
         message.innerHTML=`<span class="error">固定入口暂时无法读取。</span>\n电脑端会自动修复，无需重新安装。\n${String(error.message||error)}`;
       }
     }
+    pair.onclick=async()=>{let value=pairingValue.value;if(!value&&navigator.clipboard){try{value=await navigator.clipboard.readText()}catch{}}const next=extractToken(value);if(next.length<24){message.innerHTML='<span class="error">配对链接无效。</span>\n请从电脑端重新复制完整的固定入口。';return}saveToken(next);pairing.classList.add('hidden');await discover()};
     retry.onclick=discover;
     dashboard.addEventListener('load',()=>{status.classList.add('hidden');dashboard.classList.remove('hidden')});
     discover();setInterval(discover,30000);
