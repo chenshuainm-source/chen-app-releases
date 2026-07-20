@@ -27,18 +27,18 @@ jobs:
         shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          FILE="chen-Android-v${VERSION}.apk"
+          FILE="chen-android-v${VERSION}.apk"
           cp app/build/outputs/apk/debug/app-debug.apk "$FILE"
           sha256sum "$FILE" > "chen-v${VERSION}-SHA256.txt"
       - uses: actions/upload-artifact@v4
         with:
           name: chen-android
           path: |
-            chen-Android-*.apk
+            chen-android-*.apk
             chen-*-SHA256.txt
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
-        run: gh release create "$GITHUB_REF_NAME" chen-Android-*.apk chen-*-SHA256.txt --generate-notes --prerelease --title "陳 Android ${GITHUB_REF_NAME}"
+        run: gh release create "$GITHUB_REF_NAME" chen-android-*.apk chen-*-SHA256.txt --generate-notes --prerelease --title "陳 Android ${GITHUB_REF_NAME}"

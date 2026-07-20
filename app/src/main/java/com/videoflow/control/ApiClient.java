@@ -36,6 +36,9 @@ final class ApiClient {
         String scheme = uri.getScheme();
         if (!("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme)) || uri.getHost() == null) return null;
         String token = uri.getQueryParameter("access");
+        if ((token == null || token.length() < 24) && uri.getFragment() != null) {
+            token = Uri.parse("https://pair.local/?" + uri.getFragment()).getQueryParameter("access");
+        }
         if (token == null || token.length() < 24) return null;
         String authority = uri.getEncodedAuthority();
         String path = uri.getEncodedPath();
